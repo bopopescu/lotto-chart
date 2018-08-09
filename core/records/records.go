@@ -10,17 +10,17 @@ import (
 )
 
 type QueryBean struct {
-	Limit            string `json:"limit"`
-	OrderParam       string `json:"order_param"`
-	WhereParamString string `json:"where_param_string"`
-	TimeBetween      string `json:"time_between"`
-	TimeColumnName   string `json:"time_column_name"`
+	Limit          string `json:"limit" form:"limit" binding:"required"`
+	OrderParam     string `json:"order_param" form:"order_param"`
+	WhereParam     string `json:"where_param" form:"where_param"`
+	TimeBetween    string `json:"time_between" form:"time_between"`
+	TimeColumnName string `json:"time_column_name" form:"time_column_name"`
 }
 
 type BeanRecords struct {
-	Count   int64
-	Records interface{}
-	Qb      *QueryBean `json:"-"`
+	Count   int64       `json:"count"`
+	Records interface{} `json:"records"`
+	Qb      *QueryBean  `json:"-"`
 }
 
 func NewBeanRecords(rs interface{}, qb *QueryBean) *BeanRecords {
@@ -54,8 +54,8 @@ func (op *BeanRecords) List(qus ...string) (err error) {
 	if op.Qb.OrderParam == "" {
 		op.Qb.OrderParam = "id"
 	}
-	if op.Qb.WhereParamString != "" {
-		ps := strings.Split(op.Qb.WhereParamString, ",")
+	if op.Qb.WhereParam != "" {
+		ps := strings.Split(op.Qb.WhereParam, ",")
 		paramSlice = append(paramSlice, ps...)
 	}
 	if op.Qb.TimeColumnName == "" {
@@ -79,8 +79,9 @@ func (op *BeanRecords) List(qus ...string) (err error) {
 		)
 		if len(limit) == 1 {
 			rows = limit[0]
+		} else {
+			rows = limit[1]
 		}
-		rows = limit[1]
 		if rows > maxRows {
 			rows = maxRows
 		}

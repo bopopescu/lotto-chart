@@ -16,6 +16,8 @@ import "github.com/atcharles/gof/goform"
 //不存在直接保存
 */
 type UserOwnCard struct {
+	BaseModel       `xorm:"extends"`
+	Uid             int64           `json:"uid" xorm:"notnull index"`
 	Gid             int64           `json:"gid" xorm:"notnull index"`
 	CardTypeID      int64           `json:"card_type_id" xorm:"notnull index"`
 	Expire          goform.JSONTime `json:"expire" xorm:"notnull index"`

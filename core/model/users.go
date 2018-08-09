@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"regexp"
 	"sync"
+	"time"
 
 	"github.com/atcharles/gof/goform"
 	"github.com/atcharles/gof/gofutils"
@@ -32,6 +33,7 @@ type Users struct {
 	Password  string `json:"password,omitempty"`
 	RoleID    int64  `json:"role_id" xorm:"index"`
 	RoleName  string `json:"role_name"`
+	Comment   string `json:"comment" xorm:"varchar(255)"`
 	SmsCode   string `json:"sms_code,omitempty" xorm:"-"`
 	CapObj    `xorm:"-"`
 }
@@ -149,8 +151,9 @@ func (m *Users) GenerateToken() (tokenString string, err error) {
 	rawBytes, _ := json.Marshal(m)
 	// Create the token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  m.ID,
-		"BTS": string(rawBytes),
+		"id":   m.ID,
+		"BST":  string(rawBytes),
+		"time": time.Now(),
 	})
 	if tokenString, err = token.SignedString([]byte(ini.GetSystemKey())); err != nil {
 		return
@@ -188,7 +191,7 @@ func (m *Users) AuthValidator(c *gin.Context) {
 		return
 	}
 	bean := &Users{}
-	if err = json.Unmarshal([]byte(claims["BTS"].(string)), bean); err != nil {
+	if err = json.Unmarshal([]byte(claims["BST"].(string)), bean); err != nil {
 		c.AbortWithError(http.StatusUnauthorized, err)
 		return
 	}

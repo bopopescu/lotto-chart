@@ -15,16 +15,12 @@ func GinServer() {
 	orm.Initialize()
 
 	gin.DisableConsoleColor()
-	webLog := chart.RootDir + "logs/web/log.log"
-	gin.DefaultWriter = goflogger.GetFile(webLog).GetFile()
+	gin.DefaultWriter = goflogger.GetFile(chart.RootDir + "logs/web/log.log").GetFile()
 	gin.DefaultErrorWriter = goflogger.GetFile(chart.RootDir + "logs/web/err.log").GetFile()
-
 	gin.SetMode("release")
-	eg := gin.Default()
-	router.Router(eg)
 
 	//
 	go model.CollectKjData()
 
-	log.Fatalln(eg.Run(":39100"))
+	log.Fatalln(router.Router(gin.Default()).Run(":39100"))
 }

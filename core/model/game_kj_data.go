@@ -149,7 +149,7 @@ func collectStart() {
 		return
 	}
 	for _, lt := range beans {
-		cBean := &Collection{lt: lt, wait: time.Second * 3}
+		cBean := &Collection{lt: lt, wait: time.Second * 3, stop: make(chan bool, 1)}
 		//存储采集对象
 		collectMap = &sync.Map{}
 		collectMap.Store(lt.Name, cBean)

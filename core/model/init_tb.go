@@ -38,6 +38,7 @@ func Initialize() {
 		smsBean,
 		cardTypesBean,
 		uoc,
+		new(UserByList),
 	}
 	if err = orm.Engine.Sync2(beans...); err != nil {
 		log.Fatalln("初始化数据表失败:" + err.Error())

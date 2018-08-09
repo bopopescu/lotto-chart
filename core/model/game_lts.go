@@ -30,7 +30,7 @@ func (m *GameLts) Request(c *gin.Context) {
 	case "GET":
 		//获取所有彩种列表
 		beans := make([]*GameLts, 0)
-		if err = orm.Engine.Find(beans); err != nil {
+		if err = orm.Engine.Find(&beans); err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 			return
 		}

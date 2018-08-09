@@ -9,9 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Router(eg *gin.Engine) {
+func Router(eg *gin.Engine) *gin.Engine {
 	eg.Use(gzip.Gzip(gzip.BestCompression))
 	eg.Use(cors.Default())
+	eg.Use(func(c *gin.Context) {
+		c.Header("Cache-Control", "no-cache, no-store")
+	})
 
 	//models
 	userBean := &model.Users{}
@@ -39,7 +42,8 @@ func Router(eg *gin.Engine) {
 	}
 
 	//所有用户
-	api := eg.Group("/Api", userBean.AuthValidator)
+	api := eg.Group("/Api")
+	api.Use(userBean.AuthValidator)
 	{
 		api.GET("/games", gameLtsBean.Request)
 	}
@@ -50,6 +54,7 @@ func Router(eg *gin.Engine) {
 		manager.Any("/games", gameLtsBean.Request)
 		//sms账户信息
 		manager.Any("/sms", smsCfg.SmsPut)
+		manager.Any("/Cards", new(model.CardTypes).Request)
 	}
 
 	//会员
@@ -58,4 +63,6 @@ func Router(eg *gin.Engine) {
 		//use
 		vip.GET("/History", kjData.History)
 	}
+
+	return eg
 }
