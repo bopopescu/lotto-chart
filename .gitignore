@@ -35,6 +35,7 @@ application.windows64
 application.macosx
 
 vendor
+!vendor/vendor.json
 .idea
 _*
 samples
