@@ -43,6 +43,7 @@ func (m *Users) ChangePassword(c *gin.Context) {
 		err         error
 		requestUser *Users
 		a           int64
+		tokenString string
 	)
 	v, _ := c.Get("visitor")
 	requestUser = v.(*Users)
@@ -59,7 +60,14 @@ func (m *Users) ChangePassword(c *gin.Context) {
 		GinHttpWithError(c, http.StatusInternalServerError, errors.New("更新数据失败"))
 		return
 	}
-	GinReturnOk(c, "密码修改成功")
+	tokenString, err = requestUser.GenerateToken()
+	if err != nil {
+		GinHttpWithError(c, http.StatusInternalServerError, err)
+		return
+	}
+	//刷新令牌
+	authMap.Store(requestUser.ID, tokenString)
+	GinReturnOk(c, tokenString)
 }
 
 func (m *Users) BeforeUpdate() {
@@ -75,8 +83,9 @@ func (m *Users) Request(c *gin.Context) {
 
 func (m *Users) ResetPassword(c *gin.Context) {
 	var (
-		err error
-		a   int64
+		err         error
+		a           int64
+		tokenString string
 	)
 	bean := &Users{}
 	if err = c.ShouldBind(bean); err != nil {
@@ -93,6 +102,15 @@ func (m *Users) ResetPassword(c *gin.Context) {
 		GinHttpWithError(c, http.StatusInternalServerError, errors.New("更新数据失败"))
 		return
 	}
+
+	tokenString, err = bean.GenerateToken()
+	if err != nil {
+		GinHttpWithError(c, http.StatusInternalServerError, err)
+		return
+	}
+	//刷新令牌
+	authMap.Store(bean.ID, tokenString)
+
 	GinReturnOk(c, "密码重置为123456")
 }
 

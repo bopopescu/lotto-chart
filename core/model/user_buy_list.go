@@ -8,6 +8,7 @@ import (
 
 	"github.com/atcharles/gof/goform"
 	"github.com/atcharles/lotto-chart/core/orm"
+	"github.com/atcharles/lotto-chart/core/records"
 	"github.com/gin-gonic/gin"
 	"github.com/go-xorm/xorm"
 )
@@ -58,6 +59,33 @@ func (m *UserByList) BeforeUpdate() {
 
 func (m *UserByList) Request(c *gin.Context) {
 	NormalRequests(c, &UserByList{})
+}
+
+func (m *UserByList) GetList(c *gin.Context) {
+	var (
+		err         error
+		requestUser *Users
+	)
+	v, _ := c.Get("visitor")
+	requestUser = v.(*Users)
+
+	qb := &records.QueryBean{}
+	if err = c.ShouldBindQuery(qb); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	wa := fmt.Sprintf("uid=%d", requestUser.ID)
+	if qb.WhereParam != "" {
+		qb.WhereParam = qb.WhereParam + "," + wa
+	} else {
+		qb.WhereParam = wa
+	}
+	res := records.NewBeanRecords([]*UserByList{}, qb)
+	if err = res.List(); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+		return
+	}
+	GinReturnOk(c, res)
 }
 
 func (m *UserByList) Put(c *gin.Context) {

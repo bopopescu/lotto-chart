@@ -92,6 +92,8 @@ func Router(eg *gin.Engine) *gin.Engine {
 		vip.GET("/CardExpire/:gid", new(model.UserOwnCard).CardExpire)
 		//购买点卡
 		vip.POST("/BuyCard", new(model.UserOwnCard).BuyCard)
+		//获取用户订单
+		vip.GET("/BuyList", new(model.UserByList).GetList)
 	}
 
 	return eg
