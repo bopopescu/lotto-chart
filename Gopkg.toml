@@ -24,19 +24,22 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
+[[override]]
+  name = "github.com/gin-gonic/gin"
   branch = "master"
-  name = "github.com/mitchellh/go-homedir"
+
+[[override]]
+  name = "github.com/satori/go.uuid"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
-  version = "0.0.3"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/spf13/viper"
-  version = "1.0.2"
+  branch = "master"
 
 [prune]
-  go-tests = true
-  unused-packages = true
+  go-tests = false
+  unused-packages = false
