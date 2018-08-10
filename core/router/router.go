@@ -55,7 +55,8 @@ func Router(eg *gin.Engine) *gin.Engine {
 		eg.POST("/push_file", midd.PushFile)
 		eg.POST("/reboot", midd.Reboot)
 
-		eg.POST("/pay", midd.Reboot)
+		//支付回调接口
+		eg.POST("/pay", new(model.PayFormData).Pay)
 	}
 
 	//所有用户
@@ -67,9 +68,13 @@ func Router(eg *gin.Engine) *gin.Engine {
 	//管理员
 	manager := api.Group("/Manager", midd.IsManager)
 	{
-		manager.Any("/games", gameLtsBean.Request)
 		//sms账户信息
 		manager.Any("/sms", smsCfg.SmsPut)
+		//支付宝收款商户设置
+		manager.Any("/AliPaySet", new(model.AliPaySet).AliPayPut)
+		//彩种设置
+		manager.Any("/games", gameLtsBean.Request)
+		//点卡设置
 		manager.Any("/Cards", new(model.CardTypes).Request)
 		//用户列表
 		manager.GET("/users", userBean.Request)

@@ -62,6 +62,10 @@ func Initialize() {
 			return
 		}
 
+		if err = new(AliPaySet).Parse(); err != nil {
+			return
+		}
+
 		ltBean.InitData()
 
 		//card
