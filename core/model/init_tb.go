@@ -1,9 +1,11 @@
 package model
 
 import (
+	"bytes"
 	"log"
 	"net/http"
 
+	"github.com/atcharles/lotto-chart/core/chart"
 	"github.com/atcharles/lotto-chart/core/orm"
 	"github.com/gin-gonic/gin"
 )
@@ -78,5 +80,12 @@ func Initialize() {
 	if err = initDB(); err != nil {
 		log.Fatalln("初始化基础数据失败:" + err.Error())
 	}
+
+	//初始化视图
+	sqlBytes := chart.MustAsset("mysql_files/views.sql")
+	if _, err = orm.Engine.Import(bytes.NewBuffer(sqlBytes)); err != nil {
+		log.Fatalln("初始化视图失败:" + err.Error())
+	}
+
 	log.Println("初始化基本数据完成!")
 }

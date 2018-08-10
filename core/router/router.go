@@ -81,7 +81,7 @@ func Router(eg *gin.Engine) *gin.Engine {
 		//重置登录密码
 		manager.PATCH("/ResetPassword", userBean.ResetPassword)
 		//订单列表
-		manager.GET("/BuyList", new(model.UserByList).Request)
+		manager.GET("/BuyList", new(model.VBuyList).Request)
 		//手动处理订单,通过/拒绝
 		manager.PUT("/BuyList", new(model.UserByList).Put)
 	}
@@ -98,7 +98,7 @@ func Router(eg *gin.Engine) *gin.Engine {
 		//购买点卡
 		vip.POST("/BuyCard", new(model.UserOwnCard).BuyCard)
 		//获取用户订单
-		vip.GET("/BuyList", new(model.UserByList).GetList)
+		vip.GET("/BuyList", new(model.VBuyList).GetList)
 	}
 
 	return eg

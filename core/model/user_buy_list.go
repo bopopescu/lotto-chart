@@ -80,7 +80,7 @@ func (m *UserByList) GetList(c *gin.Context) {
 	} else {
 		qb.WhereParam = wa
 	}
-	res := records.NewBeanRecords([]*UserByList{}, qb)
+	res := records.NewBeanRecords([]*VBuyList{}, qb)
 	if err = res.List(); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 		return
@@ -138,4 +138,19 @@ func (m *UserByList) Put(c *gin.Context) {
 
 	bean.session.Commit()
 	GinReturnOk(c, bean)
+}
+
+type VBuyList struct {
+	UserByList   `xorm:"extends"`
+	UserName     string `json:"user_name"`
+	UserComment  string `json:"user_comment"`
+	UserRoleID   int64  `json:"user_role_id"`
+	UserRoleName string `json:"user_role_name"`
+	LtName       string `json:"lt_name"`
+	LtNameCN     string `json:"lt_name_cn"`
+	LtEnable     bool   `json:"lt_enable"`
+}
+
+func (m *VBuyList) Request(c *gin.Context) {
+	NormalRequests(c, &VBuyList{})
 }
