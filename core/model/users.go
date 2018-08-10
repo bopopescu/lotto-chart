@@ -38,6 +38,64 @@ type Users struct {
 	CapObj    `xorm:"-"`
 }
 
+func (m *Users) ChangePassword(c *gin.Context) {
+	var (
+		err         error
+		requestUser *Users
+		a           int64
+	)
+	v, _ := c.Get("visitor")
+	requestUser = v.(*Users)
+	if err = c.ShouldBind(requestUser); err != nil {
+		GinHttpWithError(c, http.StatusBadRequest, err)
+		return
+	}
+	a, err = orm.Engine.ID(requestUser.ID).Cols("password").NoAutoCondition().Update(requestUser)
+	if err != nil {
+		GinHttpWithError(c, http.StatusInternalServerError, err)
+		return
+	}
+	if a == 0 {
+		GinHttpWithError(c, http.StatusInternalServerError, errors.New("更新数据失败"))
+		return
+	}
+	GinReturnOk(c, "密码修改成功")
+}
+
+func (m *Users) BeforeUpdate() {
+	if m.Password != "" {
+		newPwdByte := gofutils.AESEncrypt([]byte(ini.GetSystemKey()), []byte(m.Password))
+		m.Password = gofutils.BytesToString(newPwdByte)
+	}
+}
+
+func (m *Users) Request(c *gin.Context) {
+	NormalRequests(c, &Users{})
+}
+
+func (m *Users) ResetPassword(c *gin.Context) {
+	var (
+		err error
+		a   int64
+	)
+	bean := &Users{}
+	if err = c.ShouldBind(bean); err != nil {
+		GinHttpWithError(c, http.StatusBadRequest, err)
+		return
+	}
+	bean.Password = "123456"
+	a, err = orm.Engine.ID(bean.ID).Cols("password").NoAutoCondition().Update(bean)
+	if err != nil {
+		GinHttpWithError(c, http.StatusInternalServerError, err)
+		return
+	}
+	if a == 0 {
+		GinHttpWithError(c, http.StatusInternalServerError, errors.New("更新数据失败"))
+		return
+	}
+	GinReturnOk(c, "密码重置为123456")
+}
+
 func (m *Users) InitData() (err error) {
 	var (
 		a int64

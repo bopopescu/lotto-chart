@@ -8,9 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GinHttpMsg(c *gin.Context, code int) {
+	c.AbortWithStatusJSON(code, gin.H{"msg": http.StatusText(code)})
+}
+
+func GinHttpWithError(c *gin.Context, code int, err error) {
+	c.AbortWithStatusJSON(code, gin.H{"msg": http.StatusText(code), "err": err.Error()})
+}
+
 func CheckErrFunc(c *gin.Context, err error) {
 	c.AbortWithStatusJSON(http.StatusOK, gin.H{"code": 2, "msg": err.Error()})
 }
+
 func GinReturnOk(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": data})
 }

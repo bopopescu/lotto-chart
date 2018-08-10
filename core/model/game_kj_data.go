@@ -190,6 +190,14 @@ func (m *GameKjData) History(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		return
 	}
+	data, _ := c.Get("OWN")
+	ob := data.(*UserOwnCard)
+	wa := fmt.Sprintf("gid=%d", ob.Gid)
+	if qb.WhereParam != "" {
+		qb.WhereParam = qb.WhereParam + "," + wa
+	} else {
+		qb.WhereParam = wa
+	}
 	res := records.NewBeanRecords([]*GameKjData{}, qb)
 	if err = res.List(); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})

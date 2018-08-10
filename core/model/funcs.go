@@ -19,7 +19,7 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 	case "GET":
 		qb := &records.QueryBean{}
 		if err = c.ShouldBindQuery(qb); err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			GinHttpWithError(c, http.StatusBadRequest, err)
 			return
 		}
 		slice := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(bean)), 0, 0)
@@ -27,7 +27,7 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 		beans.Elem().Set(slice)
 		res := records.NewBeanRecords(beans.Interface(), qb)
 		if err = res.List(); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+			GinHttpWithError(c, http.StatusInternalServerError, err)
 			return
 		}
 		GinReturnOk(c, res)
@@ -37,7 +37,7 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 			return
 		}
 		if _, err = orm.Engine.InsertOne(bean); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+			GinHttpWithError(c, http.StatusInternalServerError, err)
 			return
 		}
 	case "PUT":
@@ -49,7 +49,7 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 		var a int64
 		a, err = orm.Engine.ID(id).Update(bean)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+			GinHttpWithError(c, http.StatusInternalServerError, err)
 			return
 		}
 		if a == 0 {
@@ -63,7 +63,7 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 		}
 		var a int64
 		if a, err = orm.Engine.Delete(bean); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+			GinHttpWithError(c, http.StatusInternalServerError, err)
 			return
 		}
 		if a == 0 {
@@ -73,7 +73,7 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 		GinReturnOk(c, "删除成功")
 		return
 	default:
-		c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"msg": "MethodNotAllowed"})
+		GinHttpMsg(c, http.StatusMethodNotAllowed)
 		return
 	}
 	GinReturnOk(c, bean)

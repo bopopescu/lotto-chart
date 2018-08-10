@@ -12,4 +12,3 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 upx -9 ./bin/lotto-chart
 
 ./bin/mac_chart init --push --push_url "http://chart.0755yicai.cn/push_file"
-

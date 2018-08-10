@@ -87,8 +87,8 @@ func (s *SmsConfig) SmsPut(c *gin.Context) {
 func (s *SmsConfig) SmsSend(c *gin.Context) {
 	var err error
 	bean := &SmsConfig{}
-	if err = c.Bind(bean); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+	if err = c.ShouldBind(bean); err != nil {
+		GinHttpWithError(c, http.StatusBadRequest, err)
 		return
 	}
 	//图形验证码
