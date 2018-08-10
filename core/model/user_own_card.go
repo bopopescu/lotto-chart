@@ -9,6 +9,7 @@ import (
 	"github.com/atcharles/gof/goform"
 	"github.com/atcharles/lotto-chart/core/orm"
 	"github.com/gin-gonic/gin"
+	"github.com/go-xorm/xorm"
 )
 
 /**
@@ -30,6 +31,15 @@ type UserOwnCard struct {
 	Gid             int64           `json:"gid" xorm:"notnull index"`
 	Expire          goform.JSONTime `json:"expire" xorm:"notnull index"`
 	ExpireTimestamp int64           `json:"expire_timestamp" xorm:"notnull index"`
+	session         *xorm.Session   `json:"-" xorm:"-"`
+}
+
+func (m *UserOwnCard) BeforeInsert() {
+	m.ExpireTimestamp = time.Time(m.Expire).Unix()
+}
+
+func (m *UserOwnCard) BeforeUpdate() {
+	m.ExpireTimestamp = time.Time(m.Expire).Unix()
 }
 
 var (
@@ -86,13 +96,23 @@ func (m *UserOwnCard) BuyCard(c *gin.Context) {
 		Money:  card.Price,
 	}
 
+	var has bool
+	has, err = orm.Engine.Get(listBean)
+	if err != nil {
+		GinHttpWithError(c, http.StatusInternalServerError, err)
+		return
+	}
+	if has {
+		GinReturnOk(c, listBean)
+		return
+	}
+
 	if _, err = orm.Engine.InsertOne(listBean); err != nil {
 		GinHttpWithError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	//TODO
-	GinReturnOk(c, "购买成功")
+	GinReturnOk(c, listBean)
 }
 
 func (m *UserOwnCard) CardExpire(c *gin.Context) {
@@ -147,5 +167,45 @@ func (m *UserOwnCard) Get() (err error) {
 	if !has {
 		return ErrorNoCardHad
 	}
+	return
+}
+
+//Add must be in a session,添加点卡时间
+func (m *UserOwnCard) Add(cardID int64) (err error) {
+	var (
+		card *CardTypes
+		a    int64
+	)
+
+	byCard := &BuyCardObj{CardID: cardID}
+	card, err = byCard.GetCard()
+	if err != nil {
+		return
+	}
+
+	normalTime := goform.JSONTime(time.Now().Add(time.Hour * time.Duration(24*card.Days)))
+	if err = m.Get(); err != nil {
+		if err == ErrorNoCardHad {
+			m.Expire = normalTime
+			_, err = m.session.InsertOne(m)
+		}
+		return
+	}
+
+	//过期的点卡,从当前时间开始计时
+	if time.Time(m.Expire).Before(time.Now()) {
+		m.Expire = normalTime
+	} else {
+		m.Expire = goform.JSONTime(time.Time(m.Expire).Add(time.Hour * time.Duration(24*card.Days)))
+	}
+
+	a, err = m.session.ID(m.ID).Update(m)
+	if err != nil {
+		return err
+	}
+	if a == 0 {
+		return errors.New("更新数据失败")
+	}
+
 	return
 }

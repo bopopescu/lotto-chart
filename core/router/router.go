@@ -39,6 +39,10 @@ func Router(eg *gin.Engine) *gin.Engine {
 		eg.Static("/static", chart.RootDir+"/static")
 		eg.Static("/admin", chart.RootDir+"/admin")
 		eg.Static("/web", chart.RootDir+"/web")
+
+		eg.GET("/", func(c *gin.Context) {
+			c.Redirect(http.StatusMovedPermanently, "web")
+		})
 	}
 	//static end
 
@@ -50,11 +54,12 @@ func Router(eg *gin.Engine) *gin.Engine {
 		eg.POST("/login", userBean.Login)
 		eg.POST("/push_file", midd.PushFile)
 		eg.POST("/reboot", midd.Reboot)
+
+		eg.POST("/pay", midd.Reboot)
 	}
 
 	//所有用户
-	api := eg.Group("/Api")
-	api.Use(userBean.AuthValidator)
+	api := eg.Group("/Api", userBean.AuthValidator)
 	{
 		api.GET("/games", gameLtsBean.Request)
 	}
@@ -73,7 +78,7 @@ func Router(eg *gin.Engine) *gin.Engine {
 		//订单列表
 		manager.GET("/BuyList", new(model.UserByList).Request)
 		//手动处理订单,通过/拒绝
-		manager.PUT("/BuyList")
+		manager.PUT("/BuyList", new(model.UserByList).Put)
 	}
 
 	//会员

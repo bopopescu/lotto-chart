@@ -16,6 +16,22 @@ type GameLts struct {
 	Enable    bool   `json:"enable" xorm:"notnull index"`
 }
 
+func (m *GameLts) InitData() (err error) {
+	var (
+		a int64
+	)
+	if a, err = orm.Engine.Count(m); err != nil {
+		return
+	}
+	if a == 0 {
+		bean := []*GameLts{
+			{Gid: 1, Name: "bjkl8", NameCN: "北京快乐8", Enable: true},
+		}
+		_, err = orm.Engine.Insert(bean)
+	}
+	return
+}
+
 func (m *GameLts) Request(c *gin.Context) {
 	var (
 		err error

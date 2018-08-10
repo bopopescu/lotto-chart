@@ -78,3 +78,17 @@ func NormalRequests(c *gin.Context, bean interface{}) {
 	}
 	GinReturnOk(c, bean)
 }
+
+func InitData(beans interface{}) (err error) {
+	var (
+		a int64
+	)
+	m := reflect.New(reflect.Indirect(reflect.ValueOf(beans)).Type().Elem().Elem()).Interface()
+	if a, err = orm.Engine.Count(m); err != nil {
+		return
+	}
+	if a == 0 {
+		_, err = orm.Engine.Insert(beans)
+	}
+	return
+}

@@ -21,7 +21,7 @@ func CheckErrFunc(c *gin.Context, err error) {
 }
 
 func GinReturnOk(c *gin.Context, data interface{}) {
-	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": data})
+	c.AbortWithStatusJSON(http.StatusOK, gin.H{"code": 1, "msg": data})
 }
 
 //安装,创建数据库
@@ -61,6 +61,12 @@ func Initialize() {
 		if err = new(SmsConfig).Parse(); err != nil {
 			return
 		}
+
+		ltBean.InitData()
+
+		//card
+		cards := []*CardTypes{{Name: "天卡", Days: 1, Price: 15.05}}
+		InitData(cards)
 
 		return
 	}

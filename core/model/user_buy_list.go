@@ -1,11 +1,15 @@
 package model
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/atcharles/gof/goform"
 	"github.com/atcharles/lotto-chart/core/orm"
 	"github.com/gin-gonic/gin"
+	"github.com/go-xorm/xorm"
 )
 
 type UserByList struct {
@@ -22,6 +26,8 @@ type UserByList struct {
 	OrderID       string          `json:"order_id" xorm:"varchar(50) notnull unique"`        //订单编号
 	Money         float64         `json:"money" xorm:"notnull index"`                        //充值申请金额
 	PaidMoney     float64         `json:"paid_money" xorm:"notnull index"`                   //已付金额,实际到账金额
+	ManualUpdate  bool            `json:"manual_update" xorm:"notnull index"`
+	session       *xorm.Session   `json:"-" xorm:"-"`
 }
 
 func (m *UserByList) StatusParse() {
@@ -43,21 +49,65 @@ func (m *UserByList) BeforeInsert() {
 	if !has {
 		maxID = 1
 	}
-	m.OrderID = fmt.Sprintf("%2d%2d", m.Uid, maxID)
+	m.OrderID = fmt.Sprintf("%03d%03d", m.Uid, maxID)
 }
 
 func (m *UserByList) BeforeUpdate() {
 	m.StatusParse()
-	switch m.Status {
-	case -1:
-		//已下单
-	case 1:
-		//已充值
-	case 2:
-		//已拒绝
-	}
 }
 
 func (m *UserByList) Request(c *gin.Context) {
 	NormalRequests(c, &UserByList{})
+}
+
+func (m *UserByList) Put(c *gin.Context) {
+	var (
+		err error
+		a   int64
+	)
+	bean := &UserByList{}
+	if err = c.ShouldBindJSON(bean); err != nil {
+		GinHttpWithError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	bean.session = orm.Engine.NewSession()
+	bean.session.Begin()
+	defer bean.session.Close()
+
+	bean.ManualUpdate = true
+	if bean.Status == 1 {
+		bean.PayTime = goform.JSONTime(time.Now())
+		bean.PaidMoney = bean.Money
+		// update or insert user_own_card
+
+		ownBean := &UserOwnCard{
+			Uid:     bean.Uid,
+			Gid:     bean.Gid,
+			session: bean.session,
+		}
+
+		if err = ownBean.Add(bean.CardID); err != nil {
+			GinHttpWithError(c, http.StatusInternalServerError, err)
+			bean.session.Rollback()
+			return
+		}
+
+	} else {
+		bean.Status = 2
+	}
+	a, err = bean.session.ID(bean.ID).UseBool().Where("status=-1").Update(bean)
+	if err != nil {
+		GinHttpWithError(c, http.StatusInternalServerError, err)
+		bean.session.Rollback()
+		return
+	}
+	if a == 0 {
+		GinHttpWithError(c, http.StatusInternalServerError, errors.New("更新数据失败"))
+		bean.session.Rollback()
+		return
+	}
+
+	bean.session.Commit()
+	GinReturnOk(c, bean)
 }
