@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/atcharles/gof/gofconf"
 	"github.com/atcharles/lotto-chart/core/chart"
 	"github.com/atcharles/lotto-chart/core/midd"
 	"github.com/atcharles/lotto-chart/core/model"
@@ -12,18 +13,24 @@ import (
 )
 
 func Router(eg *gin.Engine) *gin.Engine {
+	eg.NoRoute(func(c *gin.Context) {
+		model.GinHttpMsg(c, http.StatusNotFound)
+	})
+
+	eg.NoMethod(func(c *gin.Context) {
+		model.GinHttpMsg(c, http.StatusMethodNotAllowed)
+	})
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowCredentials = true
+	corsConfig.AllowAllOrigins = true
 	eg.Use(
 		gzip.Gzip(gzip.BestCompression),
-		cors.Default(),
+		cors.New(corsConfig),
 		func(c *gin.Context) {
-			c.Header("Cache-Control", "no-cache, no-store")
-
-			c.Next()
-
+			c.Header(gofconf.HeaderCacheControl, "no-cache,no-store")
+			c.Header(gofconf.HeaderPragma, "no-cache,no-store")
 			c.Header("X-Server", chart.ServerName+"/"+chart.Version)
-			if c.Writer.Status() == http.StatusNotFound {
-				c.JSON(http.StatusNotFound, gin.H{"msg": http.StatusText(http.StatusNotFound)})
-			}
 		},
 	)
 
