@@ -96,6 +96,10 @@ func Router(eg *gin.Engine) *gin.Engine {
 	//会员
 	vip := api.Group("/Vip", midd.IsVip)
 	{
+		//获取二维码收款信息
+		vip.GET("/AliPay", new(model.AliPaySet).AliPayPut)
+		//点卡列表
+		vip.GET("/Cards", new(model.CardTypes).Request)
 		//修改密码
 		vip.PATCH("/ChangePassword", userBean.ChangePassword)
 		//use

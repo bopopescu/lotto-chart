@@ -8,20 +8,27 @@ import (
 )
 
 type AliPaySet struct {
-	Sid    string `json:"sid" ini:"sid" comment:"商户名称"`
-	Secret string `json:"secret" ini:"secret" comment:"商户密钥"`
+	Sid         string `json:"sid" ini:"sid" comment:"商户名称"`
+	Secret      string `json:"secret" ini:"secret" comment:"商户密钥"`
+	PayRCodeURL string `json:"pay_r_code_url" ini:"RCode" comment:"收款二维码地址"`
 }
 
 func (m *AliPaySet) AliPayPut(c *gin.Context) {
 	var (
-		bean = &AliPaySet{}
-		err  error
+		bean        = &AliPaySet{}
+		err         error
+		requestUser *Users
 	)
+	v, _ := c.Get("visitor")
+	requestUser = v.(*Users)
 	switch c.Request.Method {
 	case "GET":
 		if err = bean.Parse(); err != nil {
 			GinHttpWithError(c, http.StatusInternalServerError, err)
 			return
+		}
+		if requestUser.RoleID != 3 {
+			bean = &AliPaySet{PayRCodeURL: bean.PayRCodeURL}
 		}
 		GinReturnOk(c, bean)
 	case "PUT":
