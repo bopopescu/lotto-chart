@@ -24,6 +24,12 @@ func Router(eg *gin.Engine) *gin.Engine {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowCredentials = true
 	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{
+		"Origin",
+		"Content-Length",
+		"Content-Type",
+		"Authorization",
+	}
 	eg.Use(
 		gzip.Gzip(gzip.BestCompression),
 		cors.New(corsConfig),
