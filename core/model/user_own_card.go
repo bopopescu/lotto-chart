@@ -116,12 +116,14 @@ func (m *UserOwnCard) BuyCard(c *gin.Context) {
 }
 
 func (m *UserOwnCard) CardExpire(c *gin.Context) {
+	v, _ := c.Get("visitor")
 	var (
-		err error
+		err         error
+		requestUser = v.(*Users)
 	)
 	pGid := c.Param("gid")
 	gid, _ := strconv.Atoi(pGid)
-	bean := &UserOwnCard{Gid: int64(gid)}
+	bean := &UserOwnCard{Gid: int64(gid), Uid: requestUser.ID}
 	if err = bean.Get(); err != nil {
 		if err == ErrorNoCardHad {
 			CheckErrFunc(c, err)
