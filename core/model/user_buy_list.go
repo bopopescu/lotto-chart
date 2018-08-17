@@ -49,7 +49,7 @@ func (m *UserByList) BeforeInsert() {
 	has, _ := orm.Engine.Desc("id").Limit(1).Get(bean)
 	if !has {
 		maxID = 1
-	}else{
+	} else {
 		maxID = bean.ID
 	}
 	m.OrderID = fmt.Sprintf("%03d%03d", m.Uid, maxID)
