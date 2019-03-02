@@ -31,7 +31,7 @@ type UserOwnCard struct {
 	Gid             int64           `json:"gid" xorm:"notnull index"`
 	Expire          goform.JSONTime `json:"expire" xorm:"notnull index"`
 	ExpireTimestamp int64           `json:"expire_timestamp" xorm:"notnull index"`
-	session         *xorm.Session   `json:"-" xorm:"-"`
+	session         *xorm.Session   `xorm:"-"`
 }
 
 func (m *UserOwnCard) BeforeInsert() {

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -17,7 +18,8 @@ import (
 )
 
 const (
-	CollectServerURL = "http://120.78.59.194:8881/open"
+	secret           = "DD6EDB208011EC5FC1688BCDD6B24F2F01882981409F014104DF75340E32528F5B468E70D25B0BFA258C56B4721A7F1B"
+	CollectServerURL = "http://api.yh8.in/API/OpenInfo/%s?secret=%s"
 )
 
 var (
@@ -39,6 +41,8 @@ type GameKjData struct {
 	NextOpenTimestamp int64           `json:"next_open_timestamp" xorm:"notnull index"`
 	GetTime           goform.JSONTime `json:"get_time"`
 	GetTimestamp      int64           `json:"get_timestamp"`
+
+	OpenCode string `json:"open_code" xorm:"-"`
 }
 
 //获取采集到的开奖数据
@@ -57,29 +61,40 @@ type GameKjData struct {
     }
 ]
 */
+
+type Result struct {
+	Code    int        `json:"code"`
+	Message GameKjData `json:"message"`
+}
+
 func (m *GameKjData) collectAction(lt *GameLts) (err error) {
 	var (
 		rp  *grequests.Response
 		has bool
 		a   int64
 	)
-	getUrl := fmt.Sprintf("%s?name=%s&row=1", CollectServerURL, lt.Name)
+	getUrl := fmt.Sprintf(CollectServerURL, lt.Name, secret)
 	rp, err = grequests.Get(getUrl, &grequests.RequestOptions{
 		RequestTimeout: time.Second * 10,
 	})
 	if err != nil {
 		return
 	}
-	defer rp.Close()
-	gbs := []*GameKjData{m}
-	if err = rp.JSON(&gbs); err != nil {
-		return
+	defer func() {
+		_ = rp.Close()
+	}()
+	bts := rp.Bytes()
+	bean := new(Result)
+	if err = json.Unmarshal(bts, bean); err != nil {
+		return fmt.Errorf("%s:%s", err.Error(), bts)
 	}
+	*m = bean.Message
+
 	m.Gid = lt.Gid
 	m.GetTime = goform.JSONTime(time.Now())
 	m.GetTimestamp = time.Now().Unix()
 
-	if m.NextOpenTimestamp-time.Now().Unix() <= 0 {
+	if m.NextOpenTimestamp-time.Now().Unix() <= 0 || m.OpenCode == "" {
 		return errors.New("开奖中... ")
 	}
 
@@ -91,6 +106,7 @@ func (m *GameKjData) collectAction(lt *GameLts) (err error) {
 	if has {
 		return ErrKjDataExist
 	}
+	m.OpenNumber = m.OpenCode
 	a, err = orm.Engine.InsertOne(m)
 	if err != nil {
 		return

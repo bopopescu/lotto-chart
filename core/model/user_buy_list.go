@@ -28,7 +28,7 @@ type UserByList struct {
 	Money         float64         `json:"money" xorm:"notnull index"`                        //充值申请金额
 	PaidMoney     float64         `json:"paid_money" xorm:"notnull index"`                   //已付金额,实际到账金额
 	ManualUpdate  bool            `json:"manual_update" xorm:"notnull index"`
-	session       *xorm.Session   `json:"-" xorm:"-"`
+	session       *xorm.Session   `xorm:"-"`
 }
 
 func (m *UserByList) StatusParse() {
